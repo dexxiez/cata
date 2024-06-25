@@ -1,19 +1,52 @@
+import clsx from 'clsx';
 import tippy from 'tippy.js';
 
 import { DistributionMetrics as DistributionMetricsProto, ProgressMetrics, Raid as RaidProto } from '../proto/api.js';
 import { Encounter as EncounterProto, Spec } from '../proto/common.js';
 import { SimRunData } from '../proto/ui.js';
 import { ActionMetrics, SimResult, SimResultFilter } from '../proto_utils/sim_result.js';
-import { SimUI } from '../sim_ui.jsx';
+import { ActionGroupItem, SimUI } from '../sim_ui.jsx';
 import { EventID, TypedEvent } from '../typed_event.js';
 import { formatDeltaTextElem, sum } from '../utils.js';
+import { ResultsHistoryMenu } from './results_history_menu.jsx';
 
 export function addRaidSimAction(simUI: SimUI): RaidSimResultsManager {
-	simUI.addAction('Simulate', 'dps-action', async () =>
-		simUI.runSim((progress: ProgressMetrics) => {
-			resultsManager.setSimProgress(progress);
-		}),
-	);
+	const startSimulationEntry: ActionGroupItem = {
+		label: 'Simulate',
+		cssClass: 'sim-sidebar-action-group-item w-100 dps-action',
+		onClick: async () =>
+			simUI.runSim((progress: ProgressMetrics) => {
+				resultsManager.setSimProgress(progress);
+			}),
+	};
+
+	const historyMenuEntry: ActionGroupItem = {
+		children: <i className="fa fa-history" />,
+	};
+
+	const {
+		children: [_, historyMenuButton],
+	} = simUI.addActionGroup([startSimulationEntry, historyMenuEntry], {
+		cssClass: clsx('sim-sidebar-action-group'),
+	});
+
+	const resultsHistoryMenu = new ResultsHistoryMenu();
+
+	tippy(historyMenuButton, {
+		content: 'Show Recent Sim History',
+	});
+
+	tippy(historyMenuButton, {
+		interactive: true,
+		trigger: 'click',
+		placement: 'right-start',
+		onShow: tip => {
+			tip.setContent(resultsHistoryMenu.buildHistory());
+		},
+		onHidden: tip => {
+			tip.setContent(<></>);
+		},
+	});
 
 	const resultsManager = new RaidSimResultsManager(simUI);
 	simUI.sim.simResultEmitter.on((eventID, simResult) => {

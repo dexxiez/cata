@@ -88,6 +88,15 @@
 	}
 }
 
+.sim-sidebar-action-group {
+	--context-button-width: 36px;
+}
+
+.sim-sidebar-action-group-button {
+	padding-left: calc(var(--btn-padding-x) + var(--context-button-width));
+	padding-right: calc(var(--btn-padding-x) + var(--context-button-width));
+}
+
 .sim-sidebar-action-button {
 	position: relative;
 	&.loading {
